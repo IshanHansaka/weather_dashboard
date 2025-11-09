@@ -31,6 +31,16 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # For making the REST API call
+  http: ^1.2.1
+
+  # For caching the result locally
+  shared_preferences: ^2.2.3
+
+  # A simple way to manage our app's state (loading, error, success)
+  # This is much cleaner than a giant StatefulWidget
+  flutter_riverpod: ^2.5.1
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
