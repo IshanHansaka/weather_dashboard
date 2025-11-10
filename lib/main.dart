@@ -39,7 +39,7 @@ class WeatherScreen extends ConsumerWidget {
     final indexController = TextEditingController(text: providerNotifier.index);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('IN3510 Weather Dashboard')),
+      appBar: AppBar(title: const Text('Weather Dashboard')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
