@@ -13,16 +13,16 @@ final weatherProvider = AsyncNotifierProvider<WeatherNotifier, AppData>(
 class WeatherNotifier extends AsyncNotifier<AppData> {
   // --- Constants ---
   static const String _cacheKey = 'last_weather_result';
-  final String _index = "224183N";
-  final String _lat = "7.2";
-  final String _lon = "83.1";
-  late final String _apiUrl;
+  static const String _cacheTimeKey = 'last_weather_time';
+  String _currentIndex = "224183N";
+  late double _lat;
+  late double _lon;
+  late String _apiUrl;
 
   // --- Initialization ---
   @override
   FutureOr<AppData> build() {
-    _apiUrl =
-        "https://api.open-meteo.com/v1/forecast?latitude=$_lat&longitude=$_lon&current_weather=true";
+    _updateCoordsAndUrl();
 
     // On app start, try to load from cache
     return _loadFromCache();
@@ -54,6 +54,9 @@ class WeatherNotifier extends AsyncNotifier<AppData> {
             lastUpdated: DateTime.now(), // From device clock
             isCached: false,
             requestUrl: _apiUrl,
+            index: _currentIndex,
+            lat: _lat,
+            lon: _lon,
           );
         } else {
           // Handle server error
@@ -67,36 +70,75 @@ class WeatherNotifier extends AsyncNotifier<AppData> {
     });
   }
 
+  void setIndex(String newIndex) {
+    if (newIndex.length >= 4) {
+      _currentIndex = newIndex;
+      _updateCoordsAndUrl();
+      // Update state with new coords
+      state = AsyncValue.data(
+        AppData(
+          index: _currentIndex,
+          lat: _lat,
+          lon: _lon,
+          requestUrl: _apiUrl,
+          weatherData: state.value?.weatherData,
+          lastUpdated: state.value?.lastUpdated,
+          isCached: state.value?.isCached ?? false,
+        ),
+      );
+    }
+  }
+
+  void _updateCoordsAndUrl() {
+    int firstTwo = int.parse(_currentIndex.substring(0, 2));
+    int nextTwo = int.parse(_currentIndex.substring(2, 4));
+    _lat = 5 + (firstTwo / 10.0);
+    _lon = 79 + (nextTwo / 10.0);
+    _apiUrl =
+        "https://api.open-meteo.com/v1/forecast?latitude=$_lat&longitude=$_lon&current_weather=true";
+  }
+
   // --- Private Helper Methods ---
 
   Future<AppData> _loadFromCache() async {
     final prefs = await SharedPreferences.getInstance();
     final cachedString = prefs.getString(_cacheKey);
+    final cachedTimeString = prefs.getString(_cacheTimeKey);
 
-    if (cachedString != null) {
+    if (cachedString != null && cachedTimeString != null) {
       // We have cached data
       final data = json.decode(cachedString);
       final weather = WeatherData.fromJson(data);
+      final lastUpdated = DateTime.parse(cachedTimeString);
       return AppData(
         weatherData: weather,
-        lastUpdated: DateTime.now(), // Note: This is load time, not fetch time
+        lastUpdated: lastUpdated,
         isCached: true, // Mark as cached
         requestUrl: _apiUrl,
+        index: _currentIndex,
+        lat: _lat,
+        lon: _lon,
       );
     } else {
       // No cache, return empty initial state
-      return AppData(requestUrl: _apiUrl);
+      return AppData(
+        requestUrl: _apiUrl,
+        index: _currentIndex,
+        lat: _lat,
+        lon: _lon,
+      );
     }
   }
 
   Future<void> _saveToCache(String responseBody) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_cacheKey, responseBody);
+    await prefs.setString(_cacheTimeKey, DateTime.now().toIso8601String());
   }
 
   // --- Helper for UI ---
   // We'll use this to get the index and coords for the UI
-  String get index => _index;
-  String get lat => _lat;
-  String get lon => _lon;
+  String get index => _currentIndex;
+  double get lat => _lat;
+  double get lon => _lon;
 }

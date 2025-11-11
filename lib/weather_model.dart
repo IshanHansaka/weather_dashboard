@@ -51,12 +51,18 @@ class AppData {
   final DateTime? lastUpdated;
   final bool isCached;
   final String requestUrl;
+  final String index;
+  final double lat;
+  final double lon;
 
   const AppData({
     this.weatherData,
     this.lastUpdated,
     this.isCached = false,
     required this.requestUrl,
+    required this.index,
+    required this.lat,
+    required this.lon,
   });
 
   // Helper method to create a copy with new values
@@ -65,12 +71,18 @@ class AppData {
     DateTime? lastUpdated,
     bool? isCached,
     String? requestUrl,
+    String? index,
+    double? lat,
+    double? lon,
   }) {
     return AppData(
       weatherData: weatherData ?? this.weatherData,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       isCached: isCached ?? this.isCached,
       requestUrl: requestUrl ?? this.requestUrl,
+      index: index ?? this.index,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
     );
   }
 }

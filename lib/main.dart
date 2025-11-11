@@ -36,7 +36,9 @@ class WeatherScreen extends ConsumerWidget {
     // Get the provider's notifier to access its helper methods (like get index)
     final providerNotifier = ref.read(weatherProvider.notifier);
 
-    final indexController = TextEditingController(text: providerNotifier.index);
+    final indexController = TextEditingController(
+      text: weatherState.value?.index ?? providerNotifier.index,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Weather Dashboard')),
@@ -45,14 +47,16 @@ class WeatherScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Index Input (now read-only as the value is fixed)
+            // 1. Index Input (now editable)
             TextField(
               controller: indexController,
-              readOnly: true, // As per logic, it's derived
               decoration: const InputDecoration(
                 labelText: 'Student Index',
                 border: OutlineInputBorder(),
               ),
+              onChanged: (value) {
+                ref.read(weatherProvider.notifier).setIndex(value);
+              },
             ),
             const SizedBox(height: 16),
 
@@ -121,7 +125,9 @@ class WeatherScreen extends ConsumerWidget {
               'Coordinates:',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            Text('Lat: ${notifier.lat}, Lon: ${notifier.lon}'),
+            Text(
+              'Lat: ${data.lat.toStringAsFixed(2)}, Lon: ${data.lon.toStringAsFixed(2)}',
+            ),
             const Divider(height: 24),
 
             // Weather Results
