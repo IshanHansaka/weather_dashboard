@@ -64,10 +64,26 @@ class WeatherNotifier extends AsyncNotifier<AppData> {
         }
       } catch (e) {
         // 4. Network or parsing error. Try to use cached data.
-        // We re-throw the error so the UI can show it.
-        throw Exception('Network Error: $e');
+        // If cached data exists, return it (marked as cached). Otherwise rethrow.
+        try {
+          final AppData cached = await _loadFromCache();
+          if (cached.weatherData != null) {
+            return cached;
+          }
+        } catch (_) {
+          // ignore cache load errors; we'll rethrow the original
+        }
+
+        // No cached data available -> rethrow as a clearer exception
+        throw Exception('Network error and no cached data available: $e');
       }
     });
+  }
+
+  /// Public method to explicitly load cached data into state (useful for "Show cached" button)
+  Future<void> loadCachedData() async {
+    final cached = await _loadFromCache();
+    state = AsyncValue.data(cached);
   }
 
   void setIndex(String newIndex) {

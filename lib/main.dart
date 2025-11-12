@@ -85,7 +85,7 @@ class WeatherScreen extends ConsumerWidget {
 
               // --- Error State ---
               error: (error, stackTrace) =>
-                  _buildErrorUI(context, error.toString()),
+                  _buildErrorUI(context, providerNotifier, error.toString()),
 
               // --- Loading State ---
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -176,12 +176,17 @@ class WeatherScreen extends ConsumerWidget {
   }
 
   // Widget to build for the Error state
-  Widget _buildErrorUI(BuildContext context, String error) {
+  Widget _buildErrorUI(
+    BuildContext context,
+    WeatherNotifier notifier,
+    String error,
+  ) {
     return Card(
       color: Colors.red[50],
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline, color: Colors.red[700], size: 40),
             const SizedBox(height: 12),
@@ -194,9 +199,24 @@ class WeatherScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Please check your network connection and try again. $error',
+              error,
               style: TextStyle(color: Colors.red[800]),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () => notifier.fetchWeather(),
+                  child: const Text('Retry'),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: () => notifier.loadCachedData(),
+                  child: const Text('Show cached'),
+                ),
+              ],
             ),
           ],
         ),
