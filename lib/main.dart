@@ -44,69 +44,82 @@ class WeatherScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Weather Dashboard')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. Index Input (now editable)
-              TextFormField(
-                controller: indexController,
-                decoration: const InputDecoration(
-                  labelText: 'Student Index',
-                  border: OutlineInputBorder(),
-                ),
-                maxLength: 7, // restrict length
-                onChanged: (value) {
-                  ref.read(weatherProvider.notifier).setIndex(value);
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your index';
-                  }
-                  final regex = RegExp(r'^[0-9]{6}[A-Za-z]$');
-                  if (!regex.hasMatch(value)) {
-                    return 'Index must be 6 digits + 1 letter (e.g. 224183N)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // 2. Fetch Button
-              ElevatedButton(
-                onPressed: () {
-                  if (formKey.currentState!.validate()) {
-                    ref.read(weatherProvider.notifier).fetchWeather();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+      resizeToAvoidBottomInset:
+          true, // allow body to resize when keyboard shows
+      body: SafeArea(
+        child: SingleChildScrollView(
+          // makes content scrollable
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 1. Index Input (editable + validated)
+                TextFormField(
+                  controller: indexController,
+                  decoration: const InputDecoration(
+                    labelText: 'Student Index',
+                    border: OutlineInputBorder(),
                   ),
+                  maxLength: 7,
+                  onChanged: (value) {
+                    final upperValue = value.toUpperCase();
+                    if (upperValue != value) {
+                      indexController.value = indexController.value.copyWith(
+                        text: upperValue,
+                        selection: TextSelection.collapsed(
+                          offset: upperValue.length,
+                        ),
+                      );
+                    }
+                    ref.read(weatherProvider.notifier).setIndex(upperValue);
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your index';
+                    }
+                    final regex = RegExp(r'^[0-9]{6}[A-Z]$');
+                    if (!regex.hasMatch(value)) {
+                      return 'Index must be 6 digits + 1 letter (e.g. 224183N)';
+                    }
+                    return null;
+                  },
                 ),
-                child: const Text('Fetch Weather'),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
-              // 3. Results Area - This is where the magic happens
-              weatherState.when(
-                // --- Data (Success) State ---
-                data: (appData) =>
-                    _buildResultsUI(context, providerNotifier, appData),
+                // 2. Fetch Button
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      ref.read(weatherProvider.notifier).fetchWeather();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Fetch Weather'),
+                ),
+                const SizedBox(height: 24),
 
-                // --- Error State ---
-                error: (error, stackTrace) =>
-                    _buildErrorUI(context, providerNotifier, error.toString()),
-
-                // --- Loading State ---
-                loading: () => const Center(child: CircularProgressIndicator()),
-              ),
-            ],
+                // 3. Results
+                weatherState.when(
+                  data: (appData) =>
+                      _buildResultsUI(context, providerNotifier, appData),
+                  error: (error, stackTrace) => _buildErrorUI(
+                    context,
+                    providerNotifier,
+                    error.toString(),
+                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            ),
           ),
         ),
       ),
