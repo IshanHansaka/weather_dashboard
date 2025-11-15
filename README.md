@@ -1,6 +1,11 @@
 # weather_dashboard
 
-A new Flutter project.
+A small Flutter app that:
+1. Reads your student index (e.g., 194174B)
+2. Derives latitude/longitude from it
+3. Calls Open-Meteo (no API key) and shows the current weather
+4. Displays index, coords, request URL, last update time, and handles errors
+5. Caches the last successful result locally (so it shows something offline)
 
 ## Getting Started
 
