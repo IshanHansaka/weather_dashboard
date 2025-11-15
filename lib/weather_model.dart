@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-// This represents the entire JSON response
 class WeatherData {
   final CurrentWeather currentWeather;
   final double latitude;
@@ -12,7 +11,6 @@ class WeatherData {
     required this.longitude,
   });
 
-  // A 'factory constructor' to create a WeatherData object from JSON
   factory WeatherData.fromJson(Map<String, dynamic> json) {
     return WeatherData(
       currentWeather: CurrentWeather.fromJson(json['current_weather']),
@@ -22,7 +20,6 @@ class WeatherData {
   }
 }
 
-// This represents the 'current_weather' object inside the JSON
 class CurrentWeather {
   final double temperature;
   final double windSpeed;
@@ -43,8 +40,6 @@ class CurrentWeather {
   }
 }
 
-// This is our complete, "real-world" state
-// It holds the API data, the cache status, and the last update time.
 @immutable
 class AppData {
   final WeatherData? weatherData;
@@ -65,7 +60,6 @@ class AppData {
     required this.lon,
   });
 
-  // Helper method to create a copy with new values
   AppData copyWith({
     WeatherData? weatherData,
     DateTime? lastUpdated,

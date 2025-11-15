@@ -26,27 +26,20 @@ class WeatherApp extends StatelessWidget {
   }
 }
 
-// 1. Change to ConsumerStatefulWidget
 class WeatherScreen extends ConsumerStatefulWidget {
   const WeatherScreen({super.key});
 
   @override
-  // 2. Create the State class
   ConsumerState<WeatherScreen> createState() => _WeatherScreenState();
 }
 
-// 3. Rename the class to _WeatherScreenState and extend ConsumerState
 class _WeatherScreenState extends ConsumerState<WeatherScreen> {
-  // 4. Define your controller here, outside the build method
   late final TextEditingController _indexController;
-  final _formKey = GlobalKey<FormState>(); // Also make the form key a property
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    // 5. Initialize the controller in initState
-    // We use ref.read() here because we only want the *initial* value,
-    // we don't need to listen for changes here.
     _indexController = TextEditingController(
       text: ref.read(weatherProvider.notifier).index,
     );
@@ -54,21 +47,15 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
   @override
   void dispose() {
-    // 6. Always dispose your controllers!
     _indexController.dispose();
     super.dispose();
   }
 
-  // 7. The build method is now inside the State class
   @override
   Widget build(BuildContext context) {
-    // Get the state from the provider
     final AsyncValue<AppData> weatherState = ref.watch(weatherProvider);
 
-    // Get the provider's notifier to access its helper methods
     final providerNotifier = ref.read(weatherProvider.notifier);
-
-    // We no longer define the controller here!
 
     return Scaffold(
       appBar: AppBar(title: const Text('Weather Dashboard')),
@@ -76,16 +63,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
-          // 8. Use the state-level form key
           child: Form(
-            key: _formKey, // <-- Use the property
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Index Input
                 TextFormField(
-                  // 9. Use the state-level controller
-                  controller: _indexController, // <-- Use the property
+                  controller: _indexController,
                   decoration: InputDecoration(
                     labelText: 'Student Index',
                     hintText: 'e.g., 224183N',
@@ -96,7 +80,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                   onChanged: (value) {
                     final upperValue = value.toUpperCase();
                     if (upperValue != value) {
-                      // 10. Update the state-level controller
                       _indexController.value = _indexController.value.copyWith(
                         text: upperValue,
                         selection: TextSelection.collapsed(
@@ -104,7 +87,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                         ),
                       );
                     }
-                    // This is still correct, as it updates the provider's state
                     ref.read(weatherProvider.notifier).setIndex(upperValue);
                   },
                   validator: (value) {
@@ -120,10 +102,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // 2. Fetch Button
                 ElevatedButton(
                   onPressed: () {
-                    // 11. Use the state-level form key
                     if (_formKey.currentState!.validate()) {
                       ref.read(weatherProvider.notifier).fetchWeather();
                     }
@@ -139,7 +119,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // 3. Results
                 weatherState.when(
                   data: (appData) =>
                       _buildResultsUI(context, providerNotifier, appData),
@@ -159,23 +138,18 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     );
   }
 
-  // --- No changes to your _buildResultsUI or _buildErrorUI methods ---
-  // (I've removed them from this code block for brevity,
-  // just keep your existing methods as they are)
   Widget _buildResultsUI(
     BuildContext context,
     WeatherNotifier notifier,
     AppData data,
   ) {
     final weather =
-        data.weatherData; // This might be null if only loaded from cache
+        data.weatherData;
 
-    // Format the last updated time for display
     final String formattedTime = data.lastUpdated != null
         ? DateFormat('MMM d, yyyy - hh:mm:ss a').format(data.lastUpdated!)
         : "Never";
 
-    // Add (cached) tag if needed
     final String updateTag = data.isCached ? " (cached)" : "";
 
     return Card(
@@ -185,7 +159,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Computed Coords
             Text(
               'Coordinates:',
               style: Theme.of(context).textTheme.titleMedium,
@@ -195,13 +168,11 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             ),
             const Divider(height: 24),
 
-            // Weather Results
             Text(
               'Current Weather:',
               style: Theme.of(context).textTheme.titleMedium,
             ),
 
-            // Handle case where we have cached data but no weather
             weather != null
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +195,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
             const Divider(height: 24),
 
-            // Meta Info
             Text(
               'Last Updated: $formattedTime$updateTag',
               style: const TextStyle(fontStyle: FontStyle.italic),
