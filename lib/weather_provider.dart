@@ -14,7 +14,7 @@ class WeatherNotifier extends AsyncNotifier<AppData> {
   // --- Constants ---
   static const String _cacheKey = 'last_weather_result';
   static const String _cacheTimeKey = 'last_weather_time';
-  String _currentIndex = "224183N";
+  String _currentIndex = "";
   late double _lat;
   late double _lon;
   late String _apiUrl;
@@ -24,8 +24,13 @@ class WeatherNotifier extends AsyncNotifier<AppData> {
   FutureOr<AppData> build() {
     _updateCoordsAndUrl();
 
-    // On app start, try to load from cache
-    return _loadFromCache();
+    // Start with empty state, no cache loading on app start
+    return AppData(
+      requestUrl: _apiUrl,
+      index: _currentIndex,
+      lat: _lat,
+      lon: _lon,
+    );
   }
 
   // --- Public Methods ---
@@ -106,6 +111,12 @@ class WeatherNotifier extends AsyncNotifier<AppData> {
   }
 
   void _updateCoordsAndUrl() {
+    if (_currentIndex.length < 4) {
+      _lat = 0.0;
+      _lon = 0.0;
+      _apiUrl = "";
+      return;
+    }
     int firstTwo = int.parse(_currentIndex.substring(0, 2));
     int nextTwo = int.parse(_currentIndex.substring(2, 4));
     _lat = 5 + (firstTwo / 10.0);
