@@ -86,9 +86,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                 TextFormField(
                   // 9. Use the state-level controller
                   controller: _indexController, // <-- Use the property
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Student Index',
-                    hintText: '224183N',
+                    hintText: 'e.g., 224183N',
+                    hintStyle: TextStyle(color: Colors.grey[600]),
                     border: OutlineInputBorder(),
                   ),
                   maxLength: 7,
