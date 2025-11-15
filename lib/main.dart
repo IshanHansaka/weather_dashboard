@@ -14,6 +14,7 @@ class WeatherApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Weather Dashboard',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
