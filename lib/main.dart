@@ -26,54 +26,84 @@ class WeatherApp extends StatelessWidget {
   }
 }
 
-class WeatherScreen extends ConsumerWidget {
+// 1. Change to ConsumerStatefulWidget
+class WeatherScreen extends ConsumerStatefulWidget {
   const WeatherScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  // 2. Create the State class
+  ConsumerState<WeatherScreen> createState() => _WeatherScreenState();
+}
+
+// 3. Rename the class to _WeatherScreenState and extend ConsumerState
+class _WeatherScreenState extends ConsumerState<WeatherScreen> {
+  // 4. Define your controller here, outside the build method
+  late final TextEditingController _indexController;
+  final _formKey = GlobalKey<FormState>(); // Also make the form key a property
+
+  @override
+  void initState() {
+    super.initState();
+    // 5. Initialize the controller in initState
+    // We use ref.read() here because we only want the *initial* value,
+    // we don't need to listen for changes here.
+    _indexController = TextEditingController(
+      text: ref.read(weatherProvider.notifier).index,
+    );
+  }
+
+  @override
+  void dispose() {
+    // 6. Always dispose your controllers!
+    _indexController.dispose();
+    super.dispose();
+  }
+
+  // 7. The build method is now inside the State class
+  @override
+  Widget build(BuildContext context) {
     // Get the state from the provider
     final AsyncValue<AppData> weatherState = ref.watch(weatherProvider);
 
-    // Get the provider's notifier to access its helper methods (like get index)
+    // Get the provider's notifier to access its helper methods
     final providerNotifier = ref.read(weatherProvider.notifier);
 
-    final indexController = TextEditingController(
-      text: weatherState.value?.index ?? providerNotifier.index,
-    );
-
-    final formKey = GlobalKey<FormState>();
+    // We no longer define the controller here!
 
     return Scaffold(
       appBar: AppBar(title: const Text('Weather Dashboard')),
-      resizeToAvoidBottomInset:
-          true, // allow body to resize when keyboard shows
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          // makes content scrollable
           padding: const EdgeInsets.all(16.0),
+          // 8. Use the state-level form key
           child: Form(
-            key: formKey,
+            key: _formKey, // <-- Use the property
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Index Input (editable + validated)
+                // 1. Index Input
                 TextFormField(
-                  controller: indexController,
+                  // 9. Use the state-level controller
+                  controller: _indexController, // <-- Use the property
                   decoration: const InputDecoration(
                     labelText: 'Student Index',
+                    hintText: '224183N',
                     border: OutlineInputBorder(),
                   ),
                   maxLength: 7,
                   onChanged: (value) {
                     final upperValue = value.toUpperCase();
                     if (upperValue != value) {
-                      indexController.value = indexController.value.copyWith(
+                      // 10. Update the state-level controller
+                      _indexController.value = _indexController.value.copyWith(
                         text: upperValue,
                         selection: TextSelection.collapsed(
                           offset: upperValue.length,
                         ),
                       );
                     }
+                    // This is still correct, as it updates the provider's state
                     ref.read(weatherProvider.notifier).setIndex(upperValue);
                   },
                   validator: (value) {
@@ -92,7 +122,8 @@ class WeatherScreen extends ConsumerWidget {
                 // 2. Fetch Button
                 ElevatedButton(
                   onPressed: () {
-                    if (formKey.currentState!.validate()) {
+                    // 11. Use the state-level form key
+                    if (_formKey.currentState!.validate()) {
                       ref.read(weatherProvider.notifier).fetchWeather();
                     }
                   },
@@ -127,7 +158,9 @@ class WeatherScreen extends ConsumerWidget {
     );
   }
 
-  // Widget to build for the Success state
+  // --- No changes to your _buildResultsUI or _buildErrorUI methods ---
+  // (I've removed them from this code block for brevity,
+  // just keep your existing methods as they are)
   Widget _buildResultsUI(
     BuildContext context,
     WeatherNotifier notifier,
@@ -138,7 +171,7 @@ class WeatherScreen extends ConsumerWidget {
 
     // Format the last updated time for display
     final String formattedTime = data.lastUpdated != null
-        ? DateFormat('MMM d, yyyy - hh:mm a').format(data.lastUpdated!)
+        ? DateFormat('MMM d, yyyy - hh:mm:ss a').format(data.lastUpdated!)
         : "Never";
 
     // Add (cached) tag if needed
@@ -206,7 +239,6 @@ class WeatherScreen extends ConsumerWidget {
     );
   }
 
-  // Widget to build for the Error state
   Widget _buildErrorUI(
     BuildContext context,
     WeatherNotifier notifier,
